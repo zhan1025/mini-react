@@ -23,12 +23,12 @@ function createElement(type, props, ...children){
  * @param {容器元素} container 
  */
 function myRender(el,container) {
-    nextWork = {
+    nextFiber = {
         type: el.type,
         props: {children:[el]},
         dom: container
     }
-
+    root = nextFiber
 }
 function createDom(type){
     return  type === 'TEXT_ELEMENT' 
@@ -39,7 +39,7 @@ function dealWithDomProps(dom,props){
     Object.keys(props).map(key =>{
         if(key !== 'children'){
             // 属性赋值
-            dom[key] = ['props'][key]
+            dom[key] = props[key]
         }
     })
 }
@@ -65,6 +65,22 @@ function transDataType(fiber){
         prevChild = newWork
     })
 }
+
+let root = null;
+let nextFiber= null;
+
+function commitRoot(){
+    commitWork(root.child)
+    root = null
+}
+function commitWork(fiber){
+    if(!fiber)return;
+    // 提交遍历完的dom树
+    // 向父级插入当前dom
+    fiber.parent.dom.appendChild(fiber.dom)
+    commitWork(fiber.child)
+    commitWork(fiber.sibling)
+}
 function runUnitWork(fiber){
     // 1.创建元素,有且只在不存在dom时
     if(!fiber.dom){
@@ -72,7 +88,7 @@ function runUnitWork(fiber){
         // 处理props
         dealWithDomProps(dom,fiber.props)
         //渲染，插入父容器
-        fiber.parent.dom.appendChild(dom)
+        // fiber.parent.dom.appendChild(dom)
     }
     // 2. 数据类型转换，记录父子兄弟指针
     transDataType(fiber)
@@ -87,13 +103,16 @@ function runUnitWork(fiber){
      return fiber.parent?.sibling;
 }
 
-let nextFiber= null;
 
 function workLoop(deadLine){
     let sholdyield = false;
     while(!sholdyield&&nextFiber){
         nextFiber = runUnitWork(nextFiber);
         sholdyield = deadLine.timeRemaining()<1;
+    }
+    // 树完全生成后提交到根节点
+    if(root&&!nextFiber){
+        commitRoot()
     }
     requestIdleCallback(workLoop);
 }
