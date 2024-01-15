@@ -35,29 +35,29 @@ function createDom(type){
     ? document.createTextNode('')
     : document.createElement(type)
 }
-function dealWithDomProps(dom,work){
-    Object.keys(work.props).map(key =>{
+function dealWithDomProps(dom,props){
+    Object.keys(props).map(key =>{
         if(key !== 'children'){
             // 属性赋值
-            dom[key] = work['props'][key]
+            dom[key] = ['props'][key]
         }
     })
 }
-function transDataType(work){
+function transDataType(fiber){
     let prevChild = null;
-    work['props']['children'].map((child,i)=>{
+    fiber['props']['children'].map((child,i)=>{
         // 链表结构单元
         const newWork = {
             type: child.type,
             props: child.props,
             dom: null,
-            parent: work,
+            parent: fiber,
             child: null,
             sibling: null
         }
         if(i===0){
             // 子节点中的第一位
-            work.child = newWork 
+            fiber.child = newWork 
         }else{
             // 属于上一个子节点兄弟节点
             prevChild.sibling = newWork 
@@ -65,34 +65,34 @@ function transDataType(work){
         prevChild = newWork
     })
 }
-function runUnitWork(work){
+function runUnitWork(fiber){
     // 1.创建元素,有且只在不存在dom时
-    if(!work.dom){
-        const dom = (work.dom = createDom(work.type))
+    if(!fiber.dom){
+        const dom = (fiber.dom = createDom(fiber.type))
         // 处理props
-        dealWithDomProps(dom,work)
+        dealWithDomProps(dom,fiber.props)
         //渲染，插入父容器
-        work.parent.dom.appendChild(dom)
+        fiber.parent.dom.appendChild(dom)
     }
     // 2. 数据类型转换，记录父子兄弟指针
-    transDataType(work)
+    transDataType(fiber)
     // 3. 返回下一个任务
     // 深度优先
-    if(work.child){
-        return work.child;
+    if(fiber.child){
+        return fiber.child;
     }
-    if(work.sibling){
-        return work.sibling;
+    if(fiber.sibling){
+        return fiber.sibling;
     }
-     return work.parent?.sibling;
+     return fiber.parent?.sibling;
 }
 
-let nextWork = null;
+let nextFiber= null;
 
 function workLoop(deadLine){
     let sholdyield = false;
-    while(!sholdyield&&nextWork){
-        nextWork = runUnitWork(nextWork);
+    while(!sholdyield&&nextFiber){
+        nextFiber = runUnitWork(nextFiber);
         sholdyield = deadLine.timeRemaining()<1;
     }
     requestIdleCallback(workLoop);
