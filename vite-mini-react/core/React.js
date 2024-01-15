@@ -28,6 +28,7 @@ function myRender(el,container) {
         props: {children:[el]},
         dom: container
     }
+    console.log(nextFiber)
     root = nextFiber
 }
 function createDom(type){
@@ -43,11 +44,11 @@ function dealWithDomProps(dom,props){
         }
     })
 }
-function transDataType(fiber){
+function transDataType(fiber,children){
     let prevChild = null;
-    fiber['props']['children'].map((child,i)=>{
+    children.map((child,i)=>{
         // 链表结构单元
-        const newWork = {
+        const newFiber = {
             type: child.type,
             props: child.props,
             dom: null,
@@ -57,12 +58,12 @@ function transDataType(fiber){
         }
         if(i===0){
             // 子节点中的第一位
-            fiber.child = newWork 
+            fiber.child = newFiber 
         }else{
             // 属于上一个子节点兄弟节点
-            prevChild.sibling = newWork 
+            prevChild.sibling = newFiber 
         }
-        prevChild = newWork
+        prevChild = newFiber
     })
 }
 
@@ -77,21 +78,32 @@ function commitWork(fiber){
     if(!fiber)return;
     // 提交遍历完的dom树
     // 向父级插入当前dom
-    fiber.parent.dom.appendChild(fiber.dom)
+    let fiberParent = fiber.parent
+    if(!fiberParent.dom){
+        fiberParent = fiberParent.parent
+    }
+    if(fiber.dom){
+        fiberParent.dom.append(fiber.dom)
+    }
     commitWork(fiber.child)
     commitWork(fiber.sibling)
 }
 function runUnitWork(fiber){
     // 1.创建元素,有且只在不存在dom时
-    if(!fiber.dom){
-        const dom = (fiber.dom = createDom(fiber.type))
-        // 处理props
-        dealWithDomProps(dom,fiber.props)
-        //渲染，插入父容器
-        // fiber.parent.dom.appendChild(dom)
+    let isFuncComponent = typeof fiber.type === 'function'
+    if(!isFuncComponent){
+        if(!fiber.dom){
+            const dom = (fiber.dom = createDom(fiber.type))
+            // 处理props
+            dealWithDomProps(dom,fiber.props)
+            //渲染，插入父容器
+            // fiber.parent.dom.appendChild(dom)
+        }
     }
+    if(isFuncComponent){console.log(fiber.type())}
     // 2. 数据类型转换，记录父子兄弟指针
-    transDataType(fiber)
+    let children = isFuncComponent?[fiber.type()]:fiber.props.children
+    transDataType(fiber,children)
     // 3. 返回下一个任务
     // 深度优先
     if(fiber.child){
