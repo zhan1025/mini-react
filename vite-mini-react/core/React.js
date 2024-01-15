@@ -13,7 +13,7 @@ function createElement(type, props, ...children){
         type,
         props: {
             ...props,
-            children: children.map(el => typeof el === 'string'?createTextNode(el):el)
+            children: children.map(el =>  typeof el === 'string'||typeof el === 'number'?createTextNode(el):el)
         }
     }
 }
@@ -28,7 +28,6 @@ function myRender(el,container) {
         props: {children:[el]},
         dom: container
     }
-    console.log(nextFiber)
     root = nextFiber
 }
 function createDom(type){
@@ -37,6 +36,7 @@ function createDom(type){
     : document.createElement(type)
 }
 function dealWithDomProps(dom,props){
+    console.log(props)
     Object.keys(props).map(key =>{
         if(key !== 'children'){
             // 属性赋值
@@ -83,7 +83,7 @@ function commitWork(fiber){
         fiberParent = fiberParent.parent
     }
     if(fiber.dom){
-        fiberParent.dom.append(fiber.dom)
+        fiberParent.dom.appendChild(fiber.dom)
     }
     commitWork(fiber.child)
     commitWork(fiber.sibling)
@@ -100,9 +100,10 @@ function runUnitWork(fiber){
             // fiber.parent.dom.appendChild(dom)
         }
     }
-    if(isFuncComponent){console.log(fiber.type())}
+    // if(isFuncComponent){console.log(fiber.type())}
     // 2. 数据类型转换，记录父子兄弟指针
-    let children = isFuncComponent?[fiber.type()]:fiber.props.children
+    console.log(fiber.props)
+    let children = isFuncComponent?[fiber.type(fiber.props)]:fiber.props.children
     transDataType(fiber,children)
     // 3. 返回下一个任务
     // 深度优先
