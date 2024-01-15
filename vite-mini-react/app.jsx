@@ -7,8 +7,10 @@ import React from "./core/React.js";
 function Counter({num}){
     return <div>counter{num}</div>
 }
-const App = (<div>hello world 123
+const App = (<div>
+                <h1>mini react</h1>hello world 123
                 <Counter num={123}></Counter>
+                test
                 <Counter num={345}></Counter>
             </div>)
 // function App() {
