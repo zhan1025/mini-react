@@ -30,25 +30,20 @@ function myRender(el,container) {
     }
 
 }
-function runUnitWork(work){
-    // 1.创建元素,有且只在不存在dom时
-    if(!work.dom){
-        const dom = (work.dom = work.type === 'TEXT_ELEMENT' 
-        ? document.createTextNode('')
-        : document.createElement(work.type))
-
-        // 处理props
-        Object.keys(work.props).map(key =>{
-            if(key !== 'children'){
-                // 属性赋值
-                dom[key] = work['props'][key]
-            }
-        })
-        //渲染，插入父容器
-    work.parent.dom.appendChild(dom)
-    }
-    
-    // 2. 数据类型转换，记录父子兄弟指针
+function createDom(type){
+    return  type === 'TEXT_ELEMENT' 
+    ? document.createTextNode('')
+    : document.createElement(type)
+}
+function dealWithDomProps(dom,work){
+    Object.keys(work.props).map(key =>{
+        if(key !== 'children'){
+            // 属性赋值
+            dom[key] = work['props'][key]
+        }
+    })
+}
+function transDataType(work){
     let prevChild = null;
     work['props']['children'].map((child,i)=>{
         // 链表结构单元
@@ -69,6 +64,18 @@ function runUnitWork(work){
         }
         prevChild = newWork
     })
+}
+function runUnitWork(work){
+    // 1.创建元素,有且只在不存在dom时
+    if(!work.dom){
+        const dom = (work.dom = createDom(work.type))
+        // 处理props
+        dealWithDomProps(dom,work)
+        //渲染，插入父容器
+        work.parent.dom.appendChild(dom)
+    }
+    // 2. 数据类型转换，记录父子兄弟指针
+    transDataType(work)
     // 3. 返回下一个任务
     // 深度优先
     if(work.child){
@@ -77,9 +84,7 @@ function runUnitWork(work){
     if(work.sibling){
         return work.sibling;
     }
-    if(work.parent.sibling){
-        return work.parent.sibling;
-    }
+     return work.parent?.sibling;
 }
 
 let nextWork = null;
