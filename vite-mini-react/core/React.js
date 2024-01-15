@@ -8,6 +8,7 @@ function createTextNode(text){
         }
     }
 }
+// jsx转换时会调用
 function createElement(type, props, ...children){
     return {
         type,
@@ -36,7 +37,6 @@ function createDom(type){
     : document.createElement(type)
 }
 function dealWithDomProps(dom,props){
-    console.log(props)
     Object.keys(props).map(key =>{
         if(key !== 'children'){
             // 属性赋值
@@ -102,7 +102,7 @@ function runUnitWork(fiber){
     }
     // if(isFuncComponent){console.log(fiber.type())}
     // 2. 数据类型转换，记录父子兄弟指针
-    console.log(fiber.props)
+    // function component 支持使用props变量 
     let children = isFuncComponent?[fiber.type(fiber.props)]:fiber.props.children
     transDataType(fiber,children)
     // 3. 返回下一个任务
@@ -113,7 +113,12 @@ function runUnitWork(fiber){
     if(fiber.sibling){
         return fiber.sibling;
     }
-     return fiber.parent?.sibling;
+    let next = fiber
+    while(next){
+        if(next.sibling)return next.sibling
+        next = next.parent
+    }
+     return next
 }
 
 
