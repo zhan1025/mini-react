@@ -36,25 +36,67 @@ function createDom(type){
     ? document.createTextNode('')
     : document.createElement(type)
 }
-function dealWithDomProps(dom,props){
-    Object.keys(props).map(key =>{
+function dealWithDomProps(dom,newProps,oldProps){
+/**
+ * 1.
+ */
+    Object.keys(oldProps).map(key=>{
+        if(key!=='children'){
+            if(!(key in newProps)){
+                dom.removeAttribute(key)
+            }
+        }
+    })
+    // 新有旧没有 旧有， 修改 增加
+    Object.keys(newProps).map(key =>{
         if(key !== 'children'){
-            // 属性赋值
-            dom[key] = props[key]
+            if(newProps[key] !== oldProps[key]){
+            if(key.startsWith('on')){
+                let type = key.slice(2).toLowerCase()
+                dom.removeEventListener(type,oldProps[key])
+                dom.addEventListener(type,newProps[key])
+            }else{
+                // 属性赋值
+                dom[key] = newProps[key]
+            }
+            }
+            
+            
         }
     })
 }
 function transDataType(fiber,children){
     let prevChild = null;
+    let oldFiber = fiber.alternate?.child
     children.map((child,i)=>{
-        // 链表结构单元
-        const newFiber = {
-            type: child.type,
-            props: child.props,
-            dom: null,
-            parent: fiber,
-            child: null,
-            sibling: null
+        // 暂时考虑props更新
+        let sameType = oldFiber&&oldFiber.type===child.type
+        let newFiber = null;
+        if(sameType){
+            // 认为props更新
+            newFiber = {
+                type: child.type,
+                props: child.props,
+                dom: oldFiber.dom,
+                parent: fiber,
+                child: null,
+                sibling: null,
+                effecttag: 'update',
+                alternate: oldFiber
+            }
+        }else{
+            newFiber = {
+                type: child.type,
+                props: child.props,
+                dom: null,
+                parent: fiber,
+                child: null,
+                sibling: null,
+                effecttag: 'placement'
+            }
+        }
+        if(oldFiber){
+            oldFiber = oldFiber.sibling
         }
         if(i===0){
             // 子节点中的第一位
@@ -68,10 +110,11 @@ function transDataType(fiber,children){
 }
 
 let root = null;
-let nextFiber= null;
-
+let nextFiber = null;
+let currentFiber = null;
 function commitRoot(){
     commitWork(root.child)
+    currentFiber = root
     root = null
 }
 function commitWork(fiber){
@@ -79,23 +122,40 @@ function commitWork(fiber){
     // 提交遍历完的dom树
     // 向父级插入当前dom
     let fiberParent = fiber.parent
-    if(!fiberParent.dom){
+    while(!fiberParent.dom){
         fiberParent = fiberParent.parent
     }
-    if(fiber.dom){
-        fiberParent.dom.appendChild(fiber.dom)
+    if(fiber.effecttag === 'update'){
+        dealWithDomProps(fiber.dom,fiber.props,fiber.alternate?.props)
     }
+    else if(fiber.effecttag === 'placement'){
+        if(fiber.dom){
+            fiberParent.dom.appendChild(fiber.dom)
+        }
+    }
+    
     commitWork(fiber.child)
     commitWork(fiber.sibling)
 }
+
+function update() {
+    nextFiber = {
+        type: currentFiber.type,
+        props: currentFiber.props,
+        dom: currentFiber.dom,
+        alternate: currentFiber
+    }
+    root = nextFiber
+}
 function runUnitWork(fiber){
+    console.log(fiber)
     // 1.创建元素,有且只在不存在dom时
     let isFuncComponent = typeof fiber.type === 'function'
     if(!isFuncComponent){
         if(!fiber.dom){
             const dom = (fiber.dom = createDom(fiber.type))
             // 处理props
-            dealWithDomProps(dom,fiber.props)
+            dealWithDomProps(dom,fiber.props,{})
             //渲染，插入父容器
             // fiber.parent.dom.appendChild(dom)
         }
@@ -136,6 +196,7 @@ function workLoop(deadLine){
 }
 requestIdleCallback(workLoop);
 const React = {
+    update,
     render: myRender,
     createElement
 }
