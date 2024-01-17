@@ -34,37 +34,29 @@ let root = null;
 let nextFiber = null;
 // 渲染函数
 function render(el,container){
-    console.log(container)
+    console.log(el)
     // 接收需要渲染的元素数据和根节点
     root = container;
+    let node = typeof el === 'function'?el():el
     nextFiber = {
-        type: el.type,
+        type: node.type,
         props:{
-            ...el.props,
-            children: [el],
+            ...node.props,
+            children: [node],
         },
         dom: container
     }
-    // // 创建元素
-    // const dom = createDom(el.type)
-    // // 处理props
-    // updateDomProps(dom,el.props)
-    // // 处理children
-    // const children = el.props.children
-    // children.map(child => { render(child,dom) })
-    // // 处理完后插入容器
-    // container.append(dom)
 }
 // 使用requestIdleCallBack实现任务调度
 // 任务调度需要将dom树转成链表方便调度
 function runUnitOfwork(fiber) {
     // 当数据结构中不存在dom时，需要创建dom
-        // console.log(fiber)
+        console.log(fiber)
     if(!fiber.dom){
         const dom = fiber.dom = createDom(fiber.type);
         // 处理props
         updateDomProps(dom,fiber.props)
-        fiber.parent.append(dom)
+        fiber.parent.dom.append(dom)
     }
     // 一边创建dom一边处理链表
     // 处理children
@@ -74,7 +66,7 @@ function runUnitOfwork(fiber) {
         const newFiber = {
             type: child.type,
             props: child.props,
-            parent: fiber.dom,
+            parent: fiber,
             child: null,
             sibling: null
         }
@@ -90,9 +82,6 @@ function runUnitOfwork(fiber) {
     // 返回下一个fiber
     if(fiber.child){
         return fiber.child
-    }
-    if(fiber.sibling){
-        return fiber.sibling
     }
     // 一直向上取parent sibling直至根
     let next = fiber
