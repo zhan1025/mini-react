@@ -77,14 +77,17 @@ function runUnitOfwork(fiber) {
             const dom = fiber.dom = createDom(fiber.type);
             // 处理props
             updateDomProps(dom,fiber.props)
-            console.log(fiber.parent)
-            fiber.parent.dom.append(dom)
+            let fiberParent = fiber.parent
+            while(!fiberParent.dom){
+                fiberParent = fiberParent.parent
+            }
+            fiberParent.dom.append(dom)
         }
     }
     
     // 一边创建dom一边处理链表
     // 处理children
-    
+    isFunctionComponent?console.log(fiber.type(fiber.props)):''
     let children = isFunctionComponent?[fiber.type(fiber.props)]:fiber.props.children
     // 链表转换,深度优先
     initChildren(children,fiber)

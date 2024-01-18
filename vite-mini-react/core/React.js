@@ -69,6 +69,7 @@ function transDataType(fiber,children){
     let prevChild = null;
     let oldFiber = fiber.alternate?.child
     children.map((child,i)=>{
+        console.log(child)
         // 暂时考虑props更新
         let sameType = oldFiber&&oldFiber.type===child.type
         let newFiber = null;
@@ -148,7 +149,6 @@ function update() {
     root = nextFiber
 }
 function runUnitWork(fiber){
-    console.log(fiber)
     // 1.创建元素,有且只在不存在dom时
     let isFuncComponent = typeof fiber.type === 'function'
     if(!isFuncComponent){
