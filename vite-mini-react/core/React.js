@@ -14,7 +14,8 @@ function createElement(type, props, ...children){
         type,
         props: {
             ...props,
-            children: children.map(el =>  typeof el === 'string'||typeof el === 'number'?createTextNode(el):el)
+            children: children.map(el =>  {
+                return typeof el === 'string'||typeof el === 'number'?createTextNode(el):el})
         }
     }
 }
@@ -87,7 +88,7 @@ function transDataType(fiber,children){
                 alternate: oldFiber
             }
         }else{
-            newFiber = {
+            if(child){newFiber = {
                 type: child.type,
                 props: child.props,
                 dom: null,
@@ -95,7 +96,7 @@ function transDataType(fiber,children){
                 child: null,
                 sibling: null,
                 effecttag: 'placement'
-            }
+            }}
             if(oldFiber){
                 shouldDelete.push(oldFiber)
             }
@@ -110,7 +111,10 @@ function transDataType(fiber,children){
             // 属于上一个子节点兄弟节点
             prevChild.sibling = newFiber 
         }
-        prevChild = newFiber
+        if(newFiber){
+            prevChild = newFiber
+        }
+        
     })
 
     // 当新dom比旧dom少时，移除多余child

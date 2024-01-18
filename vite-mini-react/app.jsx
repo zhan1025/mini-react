@@ -38,9 +38,10 @@ function handleShowBar(){
 }
 return (
     <div>
-        Counter
+        Counter{showBar&&bar}
         <button onClick={handleShowBar}>showBar</button>
-        <div>{showBar?bar:foo}</div>
+        {/* <div>{showBar?bar:foo}</div> */}
+        
     </div>
 )
 }
