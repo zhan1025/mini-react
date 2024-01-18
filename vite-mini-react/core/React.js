@@ -65,11 +65,12 @@ function dealWithDomProps(dom,newProps,oldProps){
         }
     })
 }
+
+let shouldDelete = []
 function transDataType(fiber,children){
     let prevChild = null;
     let oldFiber = fiber.alternate?.child
-    children.map((child,i)=>{
-        console.log(child)
+    children.map((child,i)=>{   
         // 暂时考虑props更新
         let sameType = oldFiber&&oldFiber.type===child.type
         let newFiber = null;
@@ -95,6 +96,9 @@ function transDataType(fiber,children){
                 sibling: null,
                 effecttag: 'placement'
             }
+            if(oldFiber){
+                shouldDelete.push(oldFiber)
+            }
         }
         if(oldFiber){
             oldFiber = oldFiber.sibling
@@ -114,9 +118,18 @@ let root = null;
 let nextFiber = null;
 let currentFiber = null;
 function commitRoot(){
+    shouldDelete.forEach(commitDelete);
     commitWork(root.child)
     currentFiber = root
+    shouldDelete = []
     root = null
+}
+function commitDelete(fiber){
+    let fiberParent = fiber.parent
+    while(!fiberParent.dom){
+        fiberParent = fiberParent.parent
+    }
+    fiberParent.dom.removeChild(fiber.dom)
 }
 function commitWork(fiber){
     if(!fiber)return;

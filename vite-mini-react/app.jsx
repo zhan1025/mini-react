@@ -5,14 +5,23 @@
 import React from "./core/React.js";
 // const App = React.createElement('div',{id:'app'},'helloword');
 let count = 1
+let showBar = false
 function Counter({num}){
+    const foo = <div>foo</div>
+    const bar = <p>bar</p>
     function add(){
         count++
+        React.update()
+    }
+    function change(){
+        showBar = !showBar
         React.update()
     }
     return <div>counter{num}
     <button onClick={add}>+1</button>
     {count}
+    <div>{showBar?bar:foo}</div>
+    <button onClick={change}>showBar</button>
     </div>
 }
 const App = (<div>
