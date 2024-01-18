@@ -112,19 +112,25 @@ function transDataType(fiber,children){
         }
         prevChild = newFiber
     })
+
+    // 当新dom比旧dom少时，移除多余child
+    while(oldFiber){
+        shouldDelete.push(oldFiber)
+        oldFiber = oldFiber.sibling
+    }
 }
 
 let root = null;
 let nextFiber = null;
 let currentFiber = null;
 function commitRoot(){
-    shouldDelete.forEach(commitDelete);
+    shouldDelete.forEach(commitDeletion);
     commitWork(root.child)
     currentFiber = root
     shouldDelete = []
     root = null
 }
-function commitDelete(fiber){
+function commitDeletion(fiber){
     let fiberParent = fiber.parent
     while(!fiberParent.dom){
         fiberParent = fiberParent.parent
