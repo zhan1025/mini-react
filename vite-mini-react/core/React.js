@@ -170,7 +170,6 @@ function commitWork(fiber){
 
 function updateFuncComponents(fiber) {
     wipFiber = fiber
-    console.log(fiber)
     let children = [fiber.type(fiber.props)]
     transDataType(fiber,children)
 }
@@ -211,6 +210,10 @@ function workLoop(deadLine){
     let sholdyield = false;
     while(!sholdyield&&nextFiber){
         nextFiber = runUnitWork(nextFiber);
+        // 确认更新节点的结尾边界
+        if(nextFiber?.type === currentRoot?.sibling?.type){
+            nextFiber = undefined
+        }
         sholdyield = deadLine.timeRemaining()<1;
     }
     // 树完全生成后提交到根节点
@@ -227,7 +230,7 @@ function update() {
     console.log(currentFiber)
         nextFiber = {
             ...currentFiber,
-            alternate: currentRoot
+            alternate: currentFiber
         }
         root = nextFiber
     }
