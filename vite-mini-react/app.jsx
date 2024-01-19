@@ -57,9 +57,12 @@ let showBar = false
 let barCount = 1
 let fooCount = 2
 function Bar() {
+    console.log('bar')
+    
+    const update = React.update()
     function handleBar(){
         barCount++;
-        React.update()
+        update()
     }
     return (
         <div>
@@ -69,9 +72,11 @@ function Bar() {
     )
 }
 function Foo() {
+    console.log('foo')
+    const update = React.update()
     function handleFoo(){
         fooCount++;
-        React.update()
+        update()
     }
     return (
         <div>
@@ -82,15 +87,16 @@ function Foo() {
 }
 let rootCount = 1;
 function App() {
+    console.log('app')
+    const update = React.update()
     function handleRoot(){
         rootCount++
-        React.update()
+        update()
     }
     return (
         <div>
-            hello world  mini react
+            hello world  mini react rootCount:{rootCount}
             <button onClick={handleRoot}>rootCount +1</button>
-        <p>rootCount:{rootCount}</p>
         <Foo></Foo>
         <Bar></Bar>
         </div>

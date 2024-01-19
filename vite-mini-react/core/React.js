@@ -126,20 +126,25 @@ function transDataType(fiber,children){
 
 let root = null;
 let nextFiber = null;
-let currentFiber = null;
+let currentRoot = null;
+let wipFiber = null;
 function commitRoot(){
     shouldDelete.forEach(commitDeletion);
     commitWork(root.child)
-    currentFiber = root
+    currentRoot = root
     shouldDelete = []
     root = null
 }
 function commitDeletion(fiber){
-    let fiberParent = fiber.parent
-    while(!fiberParent.dom){
-        fiberParent = fiberParent.parent
+    if(fiber.dom){
+        let fiberParent = fiber.parent
+        while(!fiberParent.dom){
+            fiberParent = fiberParent.parent
+        }
+        fiberParent.dom.removeChild(fiber.dom)
+    }else{
+    commitDeletion(fiber.child)
     }
-    fiberParent.dom.removeChild(fiber.dom)
 }
 function commitWork(fiber){
     if(!fiber)return;
@@ -154,7 +159,7 @@ function commitWork(fiber){
     }
     else if(fiber.effecttag === 'placement'){
         if(fiber.dom){
-            fiberParent.dom.appendChild(fiber.dom)
+            fiberParent.dom.append(fiber.dom)
         }
     }
     
@@ -162,32 +167,29 @@ function commitWork(fiber){
     commitWork(fiber.sibling)
 }
 
-function update() {
-    nextFiber = {
-        type: currentFiber.type,
-        props: currentFiber.props,
-        dom: currentFiber.dom,
-        alternate: currentFiber
+
+function updateFuncComponents(fiber) {
+    wipFiber = fiber
+    console.log(fiber)
+    let children = [fiber.type(fiber.props)]
+    transDataType(fiber,children)
+}
+function updateHostComponents(fiber) {
+    if(!fiber.dom){
+        const dom = (fiber.dom = createDom(fiber.type))
+        // 处理props
+        dealWithDomProps(dom,fiber.props,{})
     }
-    root = nextFiber
+    let children = fiber.props.children
+    transDataType(fiber,children)
 }
 function runUnitWork(fiber){
     // 1.创建元素,有且只在不存在dom时
     let isFuncComponent = typeof fiber.type === 'function'
-    if(!isFuncComponent){
-        if(!fiber.dom){
-            const dom = (fiber.dom = createDom(fiber.type))
-            // 处理props
-            dealWithDomProps(dom,fiber.props,{})
-            //渲染，插入父容器
-            // fiber.parent.dom.appendChild(dom)
-        }
-    }
     // if(isFuncComponent){console.log(fiber.type())}
     // 2. 数据类型转换，记录父子兄弟指针
     // function component 支持使用props变量 
-    let children = isFuncComponent?[fiber.type(fiber.props)]:fiber.props.children
-    transDataType(fiber,children)
+        isFuncComponent?updateFuncComponents(fiber):updateHostComponents(fiber)
     // 3. 返回下一个任务
     // 深度优先
     if(fiber.child){
@@ -218,6 +220,18 @@ function workLoop(deadLine){
     requestIdleCallback(workLoop);
 }
 requestIdleCallback(workLoop);
+
+function update() {
+    let currentFiber = wipFiber
+    return () => {
+    console.log(currentFiber)
+        nextFiber = {
+            ...currentFiber,
+            alternate: currentRoot
+        }
+        root = nextFiber
+    }
+}
 const React = {
     update,
     render: myRender,
