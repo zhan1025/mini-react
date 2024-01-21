@@ -80,7 +80,7 @@ function Foo() {
         // update()
     }
     function handleStr(){
-        setStr((c) => `${c}${c}`)
+        setStr(`12text`)
         // update()
     }
     return (

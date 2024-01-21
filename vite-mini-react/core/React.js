@@ -255,7 +255,7 @@ function useState(initial){
     currentFiber.stateHook = stateHooks
     function setState(action) {
         // stateHook.state = action(stateHook.state )
-        stateHook.queue.push(action)
+        stateHook.queue.push(typeof action==='function' ? action:()=>action)
             nextFiber = {
                 ...currentFiber,
                 alternate: currentFiber
