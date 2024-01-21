@@ -58,7 +58,6 @@ let barCount = 1
 let fooCount = 2
 function Bar() {
     console.log('bar')
-    
     const update = React.update()
     function handleBar(){
         barCount++;
@@ -73,15 +72,23 @@ function Bar() {
 }
 function Foo() {
     console.log('foo')
-    const update = React.update()
+    // const update = React.update()
+    const [count,setCount] = React.useState(10)
+    const [str,setStr] = React.useState('c')
     function handleFoo(){
-        fooCount++;
-        update()
+         setCount((c) => c+1)
+        // update()
+    }
+    function handleStr(){
+        setStr((c) => `${c}${c}`)
+        // update()
     }
     return (
         <div>
-            <h1>Foo {fooCount}</h1>
+            <h1>Foo {count}</h1>
+            <h1>Str {str}</h1>
             <button onClick={handleFoo}>count +1</button>
+            <button onClick={handleStr}>str</button>
         </div>
     )
 }
@@ -98,7 +105,7 @@ function App() {
             hello world  mini react rootCount:{rootCount}
             <button onClick={handleRoot}>rootCount +1</button>
         <Foo></Foo>
-        <Bar></Bar>
+        {/* <Bar></Bar> */}
         </div>
     )
 }

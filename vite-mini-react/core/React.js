@@ -169,6 +169,8 @@ function commitWork(fiber){
 
 
 function updateFuncComponents(fiber) {
+    stateHooks = []
+    stateHooksIndex = 0
     wipFiber = fiber
     let children = [fiber.type(fiber.props)]
     transDataType(fiber,children)
@@ -235,7 +237,29 @@ function update() {
         root = nextFiber
     }
 }
+let stateHooks;
+let stateHooksIndex;
+function useState(initial){
+    let currentFiber = wipFiber
+    let oldHook = currentFiber.alternate?.stateHook?.[stateHooksIndex];
+    const stateHook = {
+        state: oldHook?oldHook.state:initial
+    }
+    stateHooksIndex++
+    stateHooks.push(stateHook)
+    currentFiber.stateHook = stateHooks
+    function setState(action) {
+        stateHook.state = action(stateHook.state )
+            nextFiber = {
+                ...currentFiber,
+                alternate: currentFiber
+            }
+            root = nextFiber
+    }
+    return [stateHook.state,setState]
+}
 const React = {
+    useState,
     update,
     render: myRender,
     createElement
