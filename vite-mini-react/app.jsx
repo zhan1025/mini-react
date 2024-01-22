@@ -77,7 +77,10 @@ function Foo() {
     const [str,setStr] = React.useState('c')
     React.useEffect(() => {
         console.log('init')
-    },[])
+    },[1])
+    React.useEffect(() => {
+        console.log('update',count)
+    },[count])
     function handleFoo(){
          setCount((c) => c+1)
          setStr(`12text`)

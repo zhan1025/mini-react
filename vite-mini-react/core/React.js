@@ -170,8 +170,25 @@ function commitWork(fiber){
 function commitEffectHook(){
     function run(fiber) {
         if(!fiber)return
+
+        if(!fiber.alternate){
+            // init
+            fiber?.effectHooks?.forEach((hook)=>{
+                hook.callback()
+            })
+        }else{
+            // update
+             console.log(fiber)
+             fiber.effectHooks?.forEach((newHook,i)=>{
+                let oldEffectHook = fiber.alternate?.effectHooks[i]
+                let update = newHook.deps.some((dep,index)=>{
+                    return oldEffectHook.deps[index] !== dep
+                })
+                update && newHook.callback()
+             })
+             
+        }
         // 递归每个节点，执行上面的effect
-        fiber?.effectHook?.callback()
         run(fiber.child)
         run(fiber.sibling)
     }
@@ -179,6 +196,7 @@ function commitEffectHook(){
 }
 
 function updateFuncComponents(fiber) {
+    effectHooks = []
     stateHooks = []
     stateHooksIndex = 0
     wipFiber = fiber
@@ -274,13 +292,14 @@ function useState(initial){
     }
     return [stateHook.state,setState]
 }
-
+let effectHooks;
 function useEffect(callback,deps) {
     const effectHook = {
         callback,
         deps
     }
-    wipFiber.effectHook = effectHook
+    effectHooks.push(effectHook)
+    wipFiber.effectHooks = effectHooks
 }
 const React = {
     useState,
