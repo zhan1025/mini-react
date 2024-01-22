@@ -77,9 +77,21 @@ function Foo() {
     const [str,setStr] = React.useState('c')
     React.useEffect(() => {
         console.log('init')
-    },[1])
+        return ()=>{
+            console.log('clean up 0')
+        }
+    },[])
     React.useEffect(() => {
         console.log('update',count)
+        return ()=>{
+            console.log('clean up 1')
+        }
+    },[count])
+    React.useEffect(() => {
+        console.log('update',count)
+        return ()=>{
+            console.log('clean up 2')
+        }
     },[count])
     function handleFoo(){
          setCount((c) => c+1)

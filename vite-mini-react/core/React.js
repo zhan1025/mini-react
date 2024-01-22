@@ -174,17 +174,19 @@ function commitEffectHook(){
         if(!fiber.alternate){
             // init
             fiber?.effectHooks?.forEach((hook)=>{
-                hook.callback()
+                hook.cleanup = hook.callback()
             })
         }else{
             // update
-             console.log(fiber)
              fiber.effectHooks?.forEach((newHook,i)=>{
-                let oldEffectHook = fiber.alternate?.effectHooks[i]
-                let update = newHook.deps.some((dep,index)=>{
-                    return oldEffectHook.deps[index] !== dep
-                })
-                update && newHook.callback()
+                if(newHook.deps.length > 0){
+                    let oldEffectHook = fiber.alternate?.effectHooks[i]
+                    let update = newHook.deps.some((dep,index)=>{
+                        return oldEffectHook.deps[index] !== dep
+                    })
+                    update && (newHook.cleanup = newHook.callback())
+                }
+                
              })
              
         }
@@ -192,7 +194,20 @@ function commitEffectHook(){
         run(fiber.child)
         run(fiber.sibling)
     }
+    // 清楚effect副作用
+    function runCleanup(fiber){
+        if(!fiber)return
+        fiber.effectHooks?.forEach(hook => {
+            if(hook.deps.length>0){
+               typeof hook.cleanup === 'function'?hook.cleanup():''
+            }
+            
+        })
+        runCleanup(fiber.child)
+        runCleanup(fiber.sibling)
+    }   
     run(root)
+    runCleanup(root)
 }
 
 function updateFuncComponents(fiber) {
@@ -296,7 +311,8 @@ let effectHooks;
 function useEffect(callback,deps) {
     const effectHook = {
         callback,
-        deps
+        deps,
+        cleanup: undefined
     }
     effectHooks.push(effectHook)
     wipFiber.effectHooks = effectHooks
