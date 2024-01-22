@@ -131,6 +131,7 @@ let wipFiber = null;
 function commitRoot(){
     shouldDelete.forEach(commitDeletion);
     commitWork(root.child)
+    commitEffectHook()
     currentRoot = root
     shouldDelete = []
     root = null
@@ -166,7 +167,16 @@ function commitWork(fiber){
     commitWork(fiber.child)
     commitWork(fiber.sibling)
 }
-
+function commitEffectHook(){
+    function run(fiber) {
+        if(!fiber)return
+        // 递归每个节点，执行上面的effect
+        fiber?.effectHook?.callback()
+        run(fiber.child)
+        run(fiber.sibling)
+    }
+    run(root)
+}
 
 function updateFuncComponents(fiber) {
     stateHooks = []
@@ -264,8 +274,17 @@ function useState(initial){
     }
     return [stateHook.state,setState]
 }
+
+function useEffect(callback,deps) {
+    const effectHook = {
+        callback,
+        deps
+    }
+    wipFiber.effectHook = effectHook
+}
 const React = {
     useState,
+    useEffect,
     update,
     render: myRender,
     createElement

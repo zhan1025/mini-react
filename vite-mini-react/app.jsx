@@ -75,12 +75,16 @@ function Foo() {
     // const update = React.update()
     const [count,setCount] = React.useState(10)
     const [str,setStr] = React.useState('c')
+    React.useEffect(() => {
+        console.log('init')
+    },[])
     function handleFoo(){
          setCount((c) => c+1)
+         setStr(`12text`)
         // update()
     }
     function handleStr(){
-        setStr(`12text`)
+        setStr(`cc`)
         // update()
     }
     return (
